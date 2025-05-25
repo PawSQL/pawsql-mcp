@@ -94,7 +94,6 @@ Cloud Edition:
       "args": [
         "run", "-i", "--rm",
         "-e", "PAWSQL_VERSION=cloud",
-        "-e", "PAWSQL_API_BASE_URL=https://www.pawsql.com",
         "-e", "PAWSQL_API_EMAIL=user@example.com",
         "-e", "PAWSQL_API_PASSWORD=your-password",
         "pawsql/pawsql-mcp-server:latest"
@@ -145,7 +144,7 @@ Assistant: Here are the available workspaces:
 Provide database type and SQL query:
 
 ```sql
-Help me optimize this MySQL query:
+Help me optimize this mysql query:
 
 select *
   from customer
@@ -158,7 +157,7 @@ select *
 Provide database type, table structure (DDL), and SQL query:
 
 ```sql
-I want to optimize this MySQL query, here's the table structure:
+I want to optimize this mysql query, here's the table structure:
 
 CREATE TABLE `customer` (
   `C_CUSTKEY` int NOT NULL,

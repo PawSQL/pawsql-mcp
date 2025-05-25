@@ -15,6 +15,7 @@ import java.util.Map;
 @Service
 public class PawsqlApiService {
     private static final Logger log = LoggerFactory.getLogger(PawsqlApiService.class);
+    private static final String CLOUD_API_URL = "https://www.pawsql.com";
     private static final String API_VERSION = "v1";
     private static final String API_PATH = "/api/" + API_VERSION;
 
@@ -25,19 +26,22 @@ public class PawsqlApiService {
 
     public PawsqlApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
-        this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
-        
+
         String version = getRequiredEnvVar("PAWSQL_VERSION"); // Version is required
         
         switch (version.toLowerCase()) {
-            case "enterprise":
             case "cloud":
+                this.apiBaseUrl = CLOUD_API_URL;
+                break;
+            case "enterprise":
+                this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
                 String email = getRequiredEnvVar("PAWSQL_API_EMAIL");
                 String password = getRequiredEnvVar("PAWSQL_API_PASSWORD");
                 initializeApiCredentials(email, password);
                 break;
             case "community":
                 log.info("Using PawSQL Community Edition");
+                this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
                 initializeApiCredentials("community@pawsql.com", "community@pawsql.com");
                 break;
             default:
