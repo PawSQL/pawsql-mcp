@@ -5,7 +5,7 @@ FROM openjdk:24-slim
 WORKDIR /app
 
 # Copy project jar file
-COPY target/pawsql-mcp-0.0.1-SNAPSHOT.jar app.jar
+COPY target/pawsql-mcp-server-0.0.1-SNAPSHOT.jar app.jar
 
 # Start command
 CMD ["java", "-jar", "app.jar"]
@@ -15,4 +15,5 @@ CMD ["java", "-jar", "app.jar"]
 # mvn clean package
 
 # 2. Build Docker image
-# docker build -t pawsql-mcp:latest .
+# docker build -t pawsql/pawsql-mcp-server:latest .
+# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server:0.1.0_beta -t pawsql/pawsql-mcp-server:latest --push .

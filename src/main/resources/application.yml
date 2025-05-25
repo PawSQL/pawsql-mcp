@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pawsql-mcp
+    name: pawsql-mcp-server
   main:
     web-application-type: none
     banner-mode: off

@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.pawsql</groupId>
-    <artifactId>pawsql-mcp</artifactId>
+    <artifactId>pawsql-mcp-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>pawsql-mcp</name>
+    <name>pawsql-mcp-server</name>
     <description>PawSQL MCP server</description>
     <url/>
     <licenses>
