@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: pawsql-mcp
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: pawsql-optimizer
+        version: 0.0.1
+
+# STDIO transport settings
+logging:
+  pattern:
+    console:
