@@ -241,7 +241,7 @@ public class SqlOptimizeService {
         markdownParts.put("reportLink", generateReportLink(reportUrl));
 
         // Part 2: Analysis environment details
-        markdownParts.put("detail", (String) detailsData.getOrDefault("detailMarkdownZh", ""));
+        markdownParts.put("detail", (String) detailsData.getOrDefault("detailMarkdown", ""));
 
         // Part 3: Optimization suggestions
         markdownParts.put("suggestions", generateSuggestions(workspaceId));
