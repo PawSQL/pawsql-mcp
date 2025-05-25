@@ -158,7 +158,7 @@ select *
 Provide database type, table structure (DDL), and SQL query:
 
 ```sql
-I want to optimize this query, here's the table structure:
+I want to optimize this MySQL query, here's the table structure:
 
 CREATE TABLE `customer` (
   `C_CUSTKEY` int NOT NULL,
