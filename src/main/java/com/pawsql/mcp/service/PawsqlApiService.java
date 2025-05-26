@@ -32,12 +32,15 @@ public class PawsqlApiService {
         switch (version.toLowerCase()) {
             case "cloud":
                 this.apiBaseUrl = CLOUD_API_URL;
+                String emailCloud = getRequiredEnvVar("PAWSQL_API_EMAIL");
+                String passwordCloud = getRequiredEnvVar("PAWSQL_API_PASSWORD");
+                initializeApiCredentials(emailCloud, passwordCloud);
                 break;
             case "enterprise":
                 this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
-                String email = getRequiredEnvVar("PAWSQL_API_EMAIL");
-                String password = getRequiredEnvVar("PAWSQL_API_PASSWORD");
-                initializeApiCredentials(email, password);
+                String emailEnterprise = getRequiredEnvVar("PAWSQL_API_EMAIL");
+                String passwordEnterprise = getRequiredEnvVar("PAWSQL_API_PASSWORD");
+                initializeApiCredentials(emailEnterprise, passwordEnterprise);
                 break;
             case "community":
                 log.info("Using PawSQL Community Edition");
