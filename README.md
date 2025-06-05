@@ -43,7 +43,7 @@ PawSQL MCP Server is a SQL optimization service developed based on Spring AI, pr
         "run",
         "-i",
         "--rm",
-        "-e", "PAWSQL_VERSION=<version>",
+        "-e", "PAWSQL_EDITION=<edition>",
         "-e", "PAWSQL_API_BASE_URL=<api-url>",
         "-e", "PAWSQL_API_EMAIL=<email>",
         "-e", "PAWSQL_API_PASSWORD=<password>",
@@ -56,7 +56,7 @@ PawSQL MCP Server is a SQL optimization service developed based on Spring AI, pr
 
 3. Configuration Parameters:
 
-- `<version>`: Choose one of the following versions
+- `<edition>`: Choose one of the following editions
   * `enterprise` - Enterprise Edition
   * `cloud` - Cloud Edition
   * `community` - Community Edition
@@ -64,7 +64,7 @@ PawSQL MCP Server is a SQL optimization service developed based on Spring AI, pr
 - `<email>`: Account email
 - `<password>`: Account password
 
-4. Version Configuration Examples:
+4. Edition Configuration Examples:
 
 Enterprise Edition:
 ```json
@@ -74,7 +74,7 @@ Enterprise Edition:
       "command": "docker",
       "args": [
         "run", "-i", "--rm",
-        "-e", "PAWSQL_VERSION=enterprise",
+        "-e", "PAWSQL_EDITION=enterprise",
         "-e", "PAWSQL_API_BASE_URL=https://your-enterprise-api.com",
         "-e", "PAWSQL_API_EMAIL=admin@company.com",
         "-e", "PAWSQL_API_PASSWORD=your-password",
@@ -93,7 +93,7 @@ Cloud Edition:
       "command": "docker",
       "args": [
         "run", "-i", "--rm",
-        "-e", "PAWSQL_VERSION=cloud",
+        "-e", "PAWSQL_EDITION=cloud",
         "-e", "PAWSQL_API_EMAIL=user@example.com",
         "-e", "PAWSQL_API_PASSWORD=your-password",
         "pawsql/pawsql-mcp-server:latest"
@@ -111,7 +111,7 @@ Community Edition:
       "command": "docker",
       "args": [
         "run", "-i", "--rm",
-        "-e", "PAWSQL_VERSION=community",
+        "-e", "PAWSQL_EDITION=community",
         "-e", "PAWSQL_API_BASE_URL=https://community-api.pawsql.com",
         "pawsql/pawsql-mcp-server:latest"
       ]

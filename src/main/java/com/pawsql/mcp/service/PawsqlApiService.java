@@ -27,9 +27,9 @@ public class PawsqlApiService {
     public PawsqlApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
 
-        String version = getRequiredEnvVar("PAWSQL_VERSION"); // Version is required
+        String edition = getRequiredEnvVar("PAWSQL_EDITION");
         
-        switch (version.toLowerCase()) {
+        switch (edition.toLowerCase()) {
             case "cloud":
                 this.apiBaseUrl = CLOUD_API_URL;
                 String emailCloud = getRequiredEnvVar("PAWSQL_API_EMAIL");
@@ -48,7 +48,7 @@ public class PawsqlApiService {
                 initializeApiCredentials("community@pawsql.com", "community@pawsql.com");
                 break;
             default:
-                throw new IllegalStateException("Unsupported PawSQL version: " + version);
+                throw new IllegalStateException("Unsupported PawSQL edition: " + edition);
         }
     }
 
