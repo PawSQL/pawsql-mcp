@@ -2,20 +2,17 @@ package com.pawsql.mcp.service;
 
 import com.pawsql.mcp.model.ApiResult;
 import com.pawsql.mcp.model.DatabaseInfo;
-import com.pawsql.mcp.model.UserSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@RequestScope
 public class PawsqlApiService {
     private static final Logger log = LoggerFactory.getLogger(PawsqlApiService.class);
     private static final String CLOUD_API_URL = "https://www.pawsql.com";
@@ -23,16 +20,36 @@ public class PawsqlApiService {
     private static final String API_PATH = "/api/" + API_VERSION;
 
     private final RestTemplate restTemplate;
-    private String apiBaseUrl;
+    private final String apiBaseUrl;
     private String apiKey;
     private String frontendUrl;
-    private UserSession currentUserSession;
 
     public PawsqlApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
+
+        String edition = getRequiredEnvVar("PAWSQL_EDITION");
         
-        // In the multi-user version, we don't initialize credentials here
-        // Instead, we set them when setCurrentUserSession is called
+        switch (edition.toLowerCase()) {
+            case "cloud":
+                this.apiBaseUrl = CLOUD_API_URL;
+                String emailCloud = getRequiredEnvVar("PAWSQL_API_EMAIL");
+                String passwordCloud = getRequiredEnvVar("PAWSQL_API_PASSWORD");
+                initializeApiCredentials(emailCloud, passwordCloud);
+                break;
+            case "enterprise":
+                this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
+                String emailEnterprise = getRequiredEnvVar("PAWSQL_API_EMAIL");
+                String passwordEnterprise = getRequiredEnvVar("PAWSQL_API_PASSWORD");
+                initializeApiCredentials(emailEnterprise, passwordEnterprise);
+                break;
+            case "community":
+                log.info("Using PawSQL Community Edition");
+                this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
+                initializeApiCredentials("community@pawsql.com", "community@pawsql.com");
+                break;
+            default:
+                throw new IllegalStateException("Unsupported PawSQL edition: " + edition);
+        }
     }
 
     private String getRequiredEnvVar(String name) {
@@ -175,81 +192,9 @@ public class PawsqlApiService {
         return executeApiCall("/listWorkspaces", requestBody);
     }
 
-    /**
-     * Create an authenticated request body with the current user's API key.
-     * 
-     * @param username the username of the current user
-     * @return Map containing the userKey parameter
-     */
     private Map<String, String> createAuthenticatedRequest() {
         Map<String, String> requestBody = new HashMap<>();
-        
-        if (apiKey == null || apiKey.isEmpty()) {
-            log.warn("API key is not set, authentication will likely fail");
-        } else {
             requestBody.put("userKey", apiKey);
-        }
-        
         return requestBody;
-    }
-    
-    /**
-     * Set the current user session for this service instance.
-     * This method should be called before any API calls are made.
-     * 
-     * @param userSession The user session to use for API calls
-     */
-    public void setCurrentUserSession(UserSession userSession) {
-        if (userSession == null) {
-            throw new IllegalArgumentException("User session cannot be null");
-        }
-        
-        this.currentUserSession = userSession;
-        this.apiKey = userSession.getApiKey();
-        this.apiBaseUrl = userSession.getApiBaseUrl();
-        
-        log.info("Set current user session: {}", userSession.getEmail());
-    }
-    
-    /**
-     * Get API key for a user by authenticating with email and password.
-     * 
-     * @param email User's email
-     * @param password User's password
-     * @param edition PawSQL edition
-     * @param apiBaseUrl API base URL
-     * @return API key if authentication is successful, null otherwise
-     */
-    public String getApiKey(String email, String password, String edition, String apiBaseUrl) {
-        try {
-            log.info("Getting API key for user: {}, edition: {}", email, edition);
-            
-            // Set temporary API base URL for this call
-            String originalApiBaseUrl = this.apiBaseUrl;
-            this.apiBaseUrl = apiBaseUrl;
-            
-            Map<String, String> requestBody = new HashMap<>();
-            requestBody.put("email", email);
-            requestBody.put("password", password);
-
-            ApiResult response = executeApiCall("/getUserKey", requestBody);
-            
-            // Restore original API base URL
-            this.apiBaseUrl = originalApiBaseUrl;
-            
-            if (response != null && response.data() != null) {
-                Map<String, Object> data = (Map<String, Object>) response.data();
-                String apiKey = (String) data.get("apikey");
-                this.frontendUrl = (String) data.get("frontendUrl");
-                log.info("API key obtained successfully for user: {}", email);
-                return apiKey;
-            } else {
-                log.warn("Failed to get API key: Empty response");
-                return null;
-            }
-        } catch (Exception e) {
-            log.error("Failed to get API key", e);
-            return null;
-        }
     }
 }
