@@ -24,6 +24,39 @@ PawSQL MCP Server is a SQL optimization service developed based on Spring AI, pr
 
 ## Installation Guide
 
+### Option 1: Remote SSE Server (Recommended)
+
+1. Deploy the server:
+
+```bash
+# Pull and run the Docker container
+docker run -d \
+  --name pawsql-mcp-server \
+  -p 8080:8080 \
+  -e PAWSQL_EDITION=<edition> \
+  -e PAWSQL_API_BASE_URL=<api-url> \
+  -e PAWSQL_API_EMAIL=<email> \
+  -e PAWSQL_API_PASSWORD=<password> \
+  pawsql/pawsql-mcp-server:latest
+```
+
+2. Add the following configuration to your Claude Desktop configuration file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "PawSQL": {
+      "url": "http://localhost:8080/sse"
+    }
+  }
+}
+```
+
+### Option 2: Local STDIO Mode (Legacy)
+
 1. Configure Claude Desktop:
    * Open Claude Desktop
    * Select "Settings", click "Developer" tab

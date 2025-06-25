@@ -2,15 +2,31 @@ spring:
   application:
     name: pawsql-mcp-server
   main:
-    web-application-type: none
+    web-application-type: servlet
     banner-mode: off
   ai:
     mcp:
       server:
+        enabled: true
+        stdio: false
         name: pawsql-optimizer
         version: 0.0.1
+        resource-change-notification: true
+        tool-change-notification: true
+        prompt-change-notification: true
+        sse-endpoint: /api/v1/sse
+        sse-message-endpoint: /api/v1/mcp
+        type: sync
+        capabilities:
+          completion: true
+          prompt: true
+          resource: true
+          tool: true
 
-# STDIO transport settings
+server:
+  port: 8080
+
 logging:
-  pattern:
-    console:
+  level:
+    io.modelcontextprotocol: TRACE
+    org.springframework.ai.mcp: TRACE
