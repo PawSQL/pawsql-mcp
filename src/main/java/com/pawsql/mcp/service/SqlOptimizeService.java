@@ -4,6 +4,7 @@ import ch.qos.logback.core.util.StringUtil;
 import com.pawsql.mcp.enums.DefinitionEnum;
 import com.pawsql.mcp.model.ApiResult;
 import com.pawsql.mcp.model.DatabaseInfo;
+import com.pawsql.mcp.util.RequestContextUtil;
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
@@ -196,18 +197,28 @@ public class SqlOptimizeService {
     }
 
     private ApiResult processOptimization(String sql, String workspaceId, String dbType, boolean validateFlag) {
-        ApiResult createResult = apiService.createAnalysis(sql, workspaceId, dbType, validateFlag);
-        if (createResult == null) {
-            log.error("Failed to create SQL analysis task");
-            return new ApiResult(500, "Failed to create SQL analysis task, please try again later", null);
+        try {
+            // 在模拟请求上下文中执行API调用，确保请求作用域bean可用
+            ApiResult result = RequestContextUtil.executeInMockRequestContext(() -> 
+                apiService.createAnalysis(sql, workspaceId, dbType, validateFlag)
+            );
+            
+            if (result == null) {
+                return new ApiResult(500, "SQL optimization failed: No response from optimization service", null);
+            }
+
+            if (result.code() != 200) {
+                return result;
+            }
+
+            // 在模拟请求上下文中处理分析结果
+            return RequestContextUtil.executeInMockRequestContext(() -> 
+                processAnalysisResult(result, workspaceId, null)
+            );
+        } catch (Exception e) {
+            log.error("SQL optimization failed", e);
+            return new ApiResult(500, "SQL optimization failed: " + e.getMessage(), null);
         }
-
-        Map<String, Object> data = (Map<String, Object>) createResult.data();
-        String analysisId = (String) data.get("analysisId");
-        log.info("Analysis task created, ID: {}", analysisId);
-
-        ApiResult result = apiService.getAnalysisSummary(analysisId);
-        return processAnalysisResult(result, workspaceId, analysisId);
     }
 
     private ApiResult processAnalysisResult(ApiResult result, String workspaceId, String analysisId) {

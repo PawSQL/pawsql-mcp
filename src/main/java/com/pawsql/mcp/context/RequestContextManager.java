@@ -1,6 +1,7 @@
 package com.pawsql.mcp.context;
 
 import com.pawsql.mcp.model.JwtTokenPayload;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
@@ -10,7 +11,7 @@ import org.springframework.web.context.annotation.RequestScope;
  * 用于存储当前请求的认证信息
  */
 @Component
-@RequestScope
+@RequestScope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class RequestContextManager {
     
     /**
