@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JwtTokenUtilTest {
 
     private JwtTokenUtil jwtTokenUtil;
-    private final String testSecret = "testSecretKeyForJwtTestingPurposesOnly12345678";
-    private final long testExpiration = 3600000; // 1小时
+    private final String testSecret = "e07437cb-09be-47d0-9336-150e21ebbecd";
+    private final long testExpiration = 36000000000l; // 1小时
 
     @BeforeEach
     public void setUp() {
@@ -27,15 +27,15 @@ public class JwtTokenUtilTest {
     public void testGenerateAndValidateToken() {
         // 准备测试数据
         JwtTokenPayload payload = new JwtTokenPayload(
-                "https://test-api.pawsql.com",
+                "https://pawsql.com",
                 "v1",
-                "testuser",
-                "test-api-key-12345"
+                "Test@pawsql.com",
+                "2575BC23-BFFEAEA3-8D1E5B1A-ACF2FAE5"
         );
 
         // 生成token
         String token = jwtTokenUtil.generateToken(payload);
-        
+        System.out.println(token);
         // 验证token不为空
         assertNotNull(token);
         

@@ -30,3 +30,7 @@ logging:
   level:
     io.modelcontextprotocol: TRACE
     org.springframework.ai.mcp: TRACE
+
+jwt:
+  secret: e07437cb-09be-47d0-9336-150e21ebbecd
+  expiration: 86400000000
