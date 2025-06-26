@@ -22,39 +22,11 @@ spring:
           prompt: true
           resource: true
           tool: true
-  mvc:
-    cors:
-      allowed-origins: '*'
-      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-      allowed-headers: '*'
-      allow-credentials: true
-      max-age: 3600
 
 server:
   port: 8080
-  servlet:
-    context-path: /
-  compression:
-    enabled: true
-
-# Session management
-pawsql:
-  session:
-    timeout:
-      hours: 24
-    cleanup:
-      interval:
-        minutes: 60
-    max:
-      per:
-        user: 5
 
 logging:
   level:
     io.modelcontextprotocol: TRACE
     org.springframework.ai.mcp: TRACE
-    root: INFO
-    com.pawsql: INFO
-    AUDIT: INFO
-  pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
