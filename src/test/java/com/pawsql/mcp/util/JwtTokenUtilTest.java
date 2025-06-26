@@ -28,6 +28,7 @@ public class JwtTokenUtilTest {
         // 准备测试数据
         JwtTokenPayload payload = new JwtTokenPayload(
                 "https://pawsql.com",
+                "https://pawsql.com",
                 "v1",
                 "Test@pawsql.com",
                 "2575BC23-BFFEAEA3-8D1E5B1A-ACF2FAE5"
@@ -49,6 +50,7 @@ public class JwtTokenUtilTest {
         // 准备测试数据
         JwtTokenPayload originalPayload = new JwtTokenPayload(
                 "https://test-api.pawsql.com",
+                "https://test-api.pawsql.com",
                 "v1",
                 "testuser",
                 "test-api-key-12345"
@@ -62,10 +64,10 @@ public class JwtTokenUtilTest {
         
         // 验证提取的payload与原始payload一致
         assertNotNull(extractedPayload);
-        assertEquals(originalPayload.getBaseurl(), extractedPayload.getBaseurl());
-        assertEquals(originalPayload.getVersion(), extractedPayload.getVersion());
+        assertEquals(originalPayload.getBaseUrl(), extractedPayload.getBaseUrl());
+        assertEquals(originalPayload.getEdition(), extractedPayload.getEdition());
         assertEquals(originalPayload.getUsername(), extractedPayload.getUsername());
-        assertEquals(originalPayload.getApikey(), extractedPayload.getApikey());
+        assertEquals(originalPayload.getApiKey(), extractedPayload.getApiKey());
     }
 
     @Test
@@ -82,6 +84,7 @@ public class JwtTokenUtilTest {
     public void testMissingRequiredFields() {
         // 准备缺少必要字段的payload
         JwtTokenPayload incompletePayload = new JwtTokenPayload(
+                "https://test-api.pawsql.com",
                 "https://test-api.pawsql.com",
                 null, // 缺少version
                 "testuser",

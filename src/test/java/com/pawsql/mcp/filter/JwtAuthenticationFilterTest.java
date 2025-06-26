@@ -53,6 +53,7 @@ public class JwtAuthenticationFilterTest {
         response = new MockHttpServletResponse();
         testPayload = new JwtTokenPayload(
                 "https://test-api.pawsql.com",
+                "https://test-api.pawsql.com",
                 "v1",
                 "testuser",
                 "test-api-key-12345"

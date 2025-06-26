@@ -15,12 +15,17 @@ public class JwtTokenPayload {
     /**
      * API基础URL
      */
-    private String baseurl;
+    private String baseUrl;
     
     /**
-     * API版本号
+     * 前端URL
      */
-    private String version;
+    private String frontendUrl;
+    
+    /**
+     * 服务版本类型（cloud/enterprise/community）
+     */
+    private String edition;
     
     /**
      * 用户名
@@ -30,5 +35,5 @@ public class JwtTokenPayload {
     /**
      * API密钥
      */
-    private String apikey;
+    private String apiKey;
 }

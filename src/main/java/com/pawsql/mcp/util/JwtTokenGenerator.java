@@ -26,6 +26,7 @@ public class JwtTokenGenerator implements CommandLineRunner {
         // 生成测试用的JWT令牌
         generateAndPrintToken(
                 "https://www.pawsql.com",
+                "https://www.pawsql.com",
                 "v1",
                 "test@example.com",
                 "test-api-key-12345"
@@ -33,6 +34,7 @@ public class JwtTokenGenerator implements CommandLineRunner {
 
         // 生成企业版JWT令牌示例
         generateAndPrintToken(
+                "https://enterprise.pawsql.com",
                 "https://enterprise.pawsql.com",
                 "v2",
                 "enterprise@example.com",
@@ -47,19 +49,20 @@ public class JwtTokenGenerator implements CommandLineRunner {
     /**
      * 生成并打印JWT令牌
      *
-     * @param baseurl  API基础URL
+     * @param baseUrl  API基础URL
      * @param version  API版本号
      * @param username 用户名
-     * @param apikey   API密钥
+     * @param apiKey   API密钥
      */
-    private void generateAndPrintToken(String baseurl, String version, String username, String apikey) {
-        JwtTokenPayload payload = new JwtTokenPayload(baseurl, version, username, apikey);
+    private void generateAndPrintToken(String baseUrl, String frontendUrl, String version, String username, String apiKey) {
+        JwtTokenPayload payload = new JwtTokenPayload(baseUrl, frontendUrl, version, username, apiKey);
         String token = jwtTokenUtil.generateToken(payload);
 
         System.out.println("\n用户: " + username);
-        System.out.println("基础URL: " + baseurl);
+        System.out.println("基础URL: " + baseUrl);
+        System.out.println("前端URL: " + frontendUrl);
         System.out.println("版本: " + version);
-        System.out.println("API密钥: " + apikey);
+        System.out.println("API密钥: " + apiKey);
         System.out.println("令牌: " + token);
     }
 }

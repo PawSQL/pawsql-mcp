@@ -49,11 +49,12 @@ public class PawsqlApiService {
         }
         
         this.apiBaseUrl.set(requestContextManager.getBaseUrl());
+        this.frontendUrl.set(requestContextManager.getFrontendUrl());
         this.apiVersion.set(requestContextManager.getVersion());
         String username = requestContextManager.getUsername();
         this.apiKey.set(requestContextManager.getApiKey());
         
-        if (apiBaseUrl.get() == null || apiVersion.get() == null || username == null || apiKey.get() == null) {
+        if (apiBaseUrl.get() == null || frontendUrl.get() == null || apiVersion.get() == null || username == null || apiKey.get() == null) {
             log.error("令牌中缺少必要的认证信息");
             throw new IllegalStateException("令牌缺少必要的认证字段");
         }
@@ -67,15 +68,17 @@ public class PawsqlApiService {
      * 用于在非HTTP请求线程中使用API服务
      *
      * @param baseUrl API基础URL
-     * @param version API版本
+     * @param frontendUrl 前端URL
+     * @param version 服务版本类型（cloud/enterprise/community）
      * @param apiKey API密钥
      */
-    public void setAuthInfo(String baseUrl, String version, String apiKey) {
+    public void setAuthInfo(String baseUrl, String frontendUrl, String version, String apiKey) {
         this.apiBaseUrl.set(baseUrl);
+        this.frontendUrl.set(frontendUrl);
         this.apiVersion.set(version);
         this.apiKey.set(apiKey);
         
-        if (baseUrl == null || version == null || apiKey == null) {
+        if (baseUrl == null || frontendUrl == null || version == null || apiKey == null) {
             throw new IllegalArgumentException("认证信息不能为空");
         }
         
@@ -195,7 +198,7 @@ public class PawsqlApiService {
 
     public ApiResult listWorkspaces(int pageNumber, int pageSize) {
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("userKey", apiKey);
+        requestBody.put("userKey", apiKey.get());
         requestBody.put("pageNumber", pageNumber);
         requestBody.put("pageSize", pageSize);
         log.info("Querying workspace list: pageNumber={}, pageSize={}", pageNumber, pageSize);

@@ -58,10 +58,11 @@ public class JwtTokenUtil {
     public JwtTokenPayload getTokenPayload(String token) {
         Claims claims = getClaimsFromToken(token);
         return new JwtTokenPayload(
-                claims.get("baseurl", String.class),
-                claims.get("version", String.class),
+                claims.get("baseUrl", String.class),
+                claims.get("frontendUrl", String.class),
+                claims.get("edition", String.class),
                 claims.get("username", String.class),
-                claims.get("apikey", String.class)
+                claims.get("apiKey", String.class)
         );
     }
 
@@ -75,10 +76,10 @@ public class JwtTokenUtil {
         try {
             Claims claims = getClaimsFromToken(token);
             // 验证必要字段是否存在
-            if (claims.get("baseurl") == null || 
-                claims.get("version") == null || 
+            if (claims.get("baseUrl") == null || 
+                claims.get("edition") == null ||
                 claims.get("username") == null || 
-                claims.get("apikey") == null) {
+                claims.get("apiKey") == null) {
                 log.warn("Token缺少必要的认证信息字段");
                 return false;
             }
@@ -107,10 +108,11 @@ public class JwtTokenUtil {
      */
     public String generateToken(JwtTokenPayload payload) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("baseurl", payload.getBaseurl());
-        claims.put("version", payload.getVersion());
+        claims.put("baseUrl", payload.getBaseUrl());
+        claims.put("frontendUrl", payload.getFrontendUrl());
+        claims.put("edition", payload.getEdition());
         claims.put("username", payload.getUsername());
-        claims.put("apikey", payload.getApikey());
+        claims.put("apiKey", payload.getApiKey());
         
         return Jwts.builder()
                 .setClaims(claims)
