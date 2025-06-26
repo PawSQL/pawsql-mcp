@@ -1,103 +1,85 @@
 package com.pawsql.mcp.service;
 
+import com.pawsql.mcp.context.RequestContextManager;
 import com.pawsql.mcp.model.ApiResult;
 import com.pawsql.mcp.model.DatabaseInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@RequestScope // 确保每个请求都有独立的实例
 public class PawsqlApiService {
     private static final Logger log = LoggerFactory.getLogger(PawsqlApiService.class);
     private static final String CLOUD_API_URL = "https://www.pawsql.com";
-    private static final String API_VERSION = "v1";
-    private static final String API_PATH = "/api/" + API_VERSION;
+    private static final String API_PATH = "/api/";
 
     private final RestTemplate restTemplate;
-    private final String apiBaseUrl;
+    private String apiBaseUrl;
     private String apiKey;
     private String frontendUrl;
+    private String apiVersion;
+    
+    @Autowired
+    private RequestContextManager requestContextManager;
 
     public PawsqlApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
-
-        String edition = getRequiredEnvVar("PAWSQL_EDITION");
+    }
+    
+    /**
+     * 初始化API服务
+     * 从请求上下文中获取认证信息
+     * 在每次请求时调用
+     */
+    public void initialize() {
+        if (requestContextManager.getTokenPayload() == null) {
+            log.error("请求上下文中未找到认证信息");
+            throw new IllegalStateException("需要认证令牌");
+        }
         
-        switch (edition.toLowerCase()) {
-            case "cloud":
-                this.apiBaseUrl = CLOUD_API_URL;
-                String emailCloud = getRequiredEnvVar("PAWSQL_API_EMAIL");
-                String passwordCloud = getRequiredEnvVar("PAWSQL_API_PASSWORD");
-                initializeApiCredentials(emailCloud, passwordCloud);
-                break;
-            case "enterprise":
-                this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
-                String emailEnterprise = getRequiredEnvVar("PAWSQL_API_EMAIL");
-                String passwordEnterprise = getRequiredEnvVar("PAWSQL_API_PASSWORD");
-                initializeApiCredentials(emailEnterprise, passwordEnterprise);
-                break;
-            case "community":
-                log.info("Using PawSQL Community Edition");
-                this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
-                initializeApiCredentials("community@pawsql.com", "community@pawsql.com");
-                break;
-            default:
-                throw new IllegalStateException("Unsupported PawSQL edition: " + edition);
+        this.apiBaseUrl = requestContextManager.getBaseUrl();
+        this.apiVersion = requestContextManager.getVersion();
+        String username = requestContextManager.getUsername();
+        this.apiKey = requestContextManager.getApiKey();
+        
+        if (apiBaseUrl == null || apiVersion == null || username == null || apiKey == null) {
+            log.error("令牌中缺少必要的认证信息");
+            throw new IllegalStateException("令牌缺少必要的认证字段");
         }
+        
+        log.info("API服务已初始化，用户: {}", username);
+        validateApiKey();
     }
 
-    private String getRequiredEnvVar(String name) {
-        String value = System.getenv(name);
-        if (value == null || value.isEmpty()) {
-            throw new IllegalStateException(name + " environment variable is not set");
-        }
-        return value;
-    }
+    // 已移除getRequiredEnvVar方法，改为从请求上下文获取认证信息
 
-    private void initializeApiCredentials(String email, String password) {
-        try {
-            log.info("Initializing API credentials");
-            Map<String, String> requestBody = new HashMap<>();
-            requestBody.put("email", email);
-            requestBody.put("password", password);
-
-            ApiResult response = executeApiCall("/getUserKey", requestBody);
-            if (response != null && response.data() != null) {
-                Map<String, Object> data = (Map<String, Object>) response.data();
-                this.apiKey = (String) data.get("apikey");
-                this.frontendUrl = (String) data.get("frontendUrl");
-                log.info("API credentials initialized successfully");
-            } else {
-                throw new RuntimeException("Failed to get API credentials: Empty response");
-            }
-        } catch (Exception e) {
-            log.error("Failed to get API credentials", e);
-            throw new RuntimeException("Failed to get API credentials", e);
-        }
-    }
+    // 已移除initializeApiCredentials方法，改为从请求上下文获取认证信息
 
     private ApiResult executeApiCall(String endpoint, Map<String, ?> requestBody) {
         try {
-            String url = apiBaseUrl + API_PATH + endpoint;
+            String url = apiBaseUrl + API_PATH + apiVersion + endpoint;
             ResponseEntity<ApiResult> response = restTemplate.postForEntity(url, requestBody, ApiResult.class);
             ApiResult result = response.getBody();
 
             if (result == null) {
-                log.warn("API call returned empty response: {}", endpoint);
+                log.warn("API调用返回空响应: {}", endpoint);
                 return null;
             }
 
-            log.debug("API call successful: {}, response: {}", endpoint, result);
+            log.debug("API调用成功: {}, 响应: {}", endpoint, result);
             return result;
         } catch (Exception e) {
-            log.error("API call failed: {}", endpoint, e);
-            throw new RuntimeException("API call failed: " + endpoint, e);
+            log.error("API调用失败: {}", endpoint, e);
+            throw new RuntimeException("API调用失败: " + endpoint, e);
         }
     }
 
