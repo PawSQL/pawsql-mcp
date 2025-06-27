@@ -31,7 +31,6 @@ public class JwtTokenUtil {
     @Value("${jwt.secret:e07437cb-09be-47d0-9336-150e21ebbecd}")
     private String secret;
 
-    // 令牌有效期（毫秒），默认24小时
     @Value("${jwt.expiration:86400000000}")
     private long expiration;
 
