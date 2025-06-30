@@ -1,12 +1,10 @@
 package com.pawsql.mcp.service;
 
-import com.pawsql.mcp.context.MCPAuthContext;
-import com.pawsql.mcp.context.MCPAuthenticationContextManager;
+import com.pawsql.mcp.context.PawSQLAuthContext;
 import com.pawsql.mcp.context.RequestContextManager;
 import com.pawsql.mcp.enums.DefinitionEnum;
 import com.pawsql.mcp.model.ApiResult;
 import com.pawsql.mcp.model.DatabaseInfo;
-import com.pawsql.mcp.util.AuthContextPropagation;
 import io.micrometer.common.util.StringUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
@@ -15,28 +13,23 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 @Service
 public class SqlOptimizeService {
     private static final Logger log = LoggerFactory.getLogger(SqlOptimizeService.class);
     private final PawsqlApiService apiService;
-    
+
     @Autowired
     private RequestContextManager requestContextManager;
-    
-    @Autowired
-    private MCPAuthenticationContextManager authContextManager;
 
     public SqlOptimizeService(PawsqlApiService apiService) {
         this.apiService = apiService;
     }
-    
+
     /**
      * 确保API服务初始化
      * 在非Web请求线程中调用API服务前，需要手动初始化认证信息
@@ -44,63 +37,33 @@ public class SqlOptimizeService {
      */
     private void ensureApiServiceInitialized() {
         try {
-            // 尝试获取API基础URL，如果返回null，说明未初始化
-            if (apiService.getApiBaseUrl() == null) {
-                log.info("API服务未初始化，正在使用响应式认证上下文初始化");
-                
-                // 从响应式上下文中获取认证信息
-                Mono<MCPAuthContext> authContextMono = authContextManager.getAuthenticationContext();
-                
-                // 阻塞获取认证上下文（在实际应用中应该使用非阻塞方式）
-                MCPAuthContext authContext = authContextMono.block();
-                
-                // 如果当前上下文中没有认证信息，则尝试从传统的RequestContextManager中获取
-                if (authContext == null) {
-                    log.info("响应式上下文中没有认证信息，尝试从传统上下文中获取");
-                    
-                    // 从传统的RequestContextManager中获取认证信息
-                    com.pawsql.mcp.context.AuthContext legacyAuthContext = com.pawsql.mcp.context.AuthContext.fromRequestContext(requestContextManager);
-                    
-                    if (legacyAuthContext == null) {
-                        log.error("无法获取认证信息，请确保在调用前已设置认证上下文");
-                        throw new IllegalStateException("认证信息缺失，请确保在调用前已设置认证上下文。认证信息必须从请求头中获取");
-                    }
-                    
-                    // 验证传统认证信息是否完整
-                    if (legacyAuthContext.getBaseUrl() == null || legacyAuthContext.getFrontendUrl() == null || 
-                        legacyAuthContext.getEdition() == null || legacyAuthContext.getApiKey() == null) {
-                        log.error("认证信息不完整，缺失必要字段");
-                        throw new IllegalStateException("认证信息不完整，请确保请求头中包含所有必要的认证字段");
-                    }
-                    
-                    // 使用传统认证上下文初始化API服务
-                    requestContextManager.runWithAuth(legacyAuthContext.getTokenPayload(), () -> {
-                        String baseUrl = requestContextManager.getBaseUrl();
-                        String frontendUrl = requestContextManager.getFrontendUrl();
-                        String version = requestContextManager.getVersion();
-                        String apiKey = requestContextManager.getApiKey();
-                        
-                        apiService.setAuthInfo(baseUrl, frontendUrl, version, apiKey);
-                        log.info("API服务初始化完成（使用传统认证上下文），用户：{}", requestContextManager.getUsername());
-                    });
-                } else {
-                    // 使用响应式认证上下文初始化API服务
-                    if (!authContext.isValid() || authContext.getBaseUrl() == null || 
-                        authContext.getFrontendUrl() == null || authContext.getEdition() == null ||
-                        authContext.getApiKey() == null) {
-                        log.error("响应式认证信息不完整，缺失必要字段");
-                        throw new IllegalStateException("响应式认证信息不完整，请确保包含所有必要的认证字段");
-                    }
-                    
-                    // 设置API服务认证信息
-                    String baseUrl = authContext.getBaseUrl();
-                    String frontendUrl = authContext.getFrontendUrl();
-                    String version = authContext.getEdition();
-                    String apiKey = authContext.getApiKey();
-                    
-                    apiService.setAuthInfo(baseUrl, frontendUrl, version, apiKey);
-                    log.info("API服务初始化完成（使用响应式认证上下文），用户：{}", authContext.getSubject());
+            // 尝试获取APIKEY，如果返回null，说明未初始化
+            if (apiService.getApiKey() == null) {
+                log.info("API服务未初始化，从传统上下文中获取");
+
+                // 从传统的RequestContextManager中获取认证信息
+                PawSQLAuthContext legacyAuthContext = PawSQLAuthContext.fromRequestContext(requestContextManager);
+
+                if (legacyAuthContext == null) {
+                    log.error("无法获取认证信息，请确保在调用前已设置认证上下文");
+                    throw new IllegalStateException("认证信息缺失，请确保在调用前已设置认证上下文。认证信息必须从请求头中获取");
                 }
+
+                // 验证传统认证信息是否完整
+                if (legacyAuthContext.getApiKey() == null) {
+                    log.error("认证信息不完整，缺失必要字段");
+                    throw new IllegalStateException("认证信息不完整，请确保请求头中包含所有必要的认证字段");
+                }
+
+                // 使用传统认证上下文初始化API服务
+                requestContextManager.runWithAuth(legacyAuthContext.getTokenPayload(), () -> {
+                    String baseUrl = requestContextManager.getBaseUrl();
+                    String frontendUrl = requestContextManager.getFrontendUrl();
+                    String version = requestContextManager.getVersion();
+                    String apiKey = requestContextManager.getApiKey();
+
+                    apiService.setAuthInfo(baseUrl, frontendUrl, version, apiKey);
+                });
             }
         } catch (Exception e) {
             log.error("API服务初始化失败", e);
@@ -139,7 +102,7 @@ public class SqlOptimizeService {
         try {
             // 确保API服务已初始化
             ensureApiServiceInitialized();
-            
+
             ApiResult workspaces = apiService.listWorkspaces(1, 100);
             if (workspaces == null || workspaces.data() == null) {
                 return new ApiResult(404, "No workspaces found", null);
@@ -184,7 +147,7 @@ public class SqlOptimizeService {
         try {
             // 确保API服务已初始化
             ensureApiServiceInitialized();
-            
+
             ApiResult workspaces = apiService.listWorkspaces(1, 10);
             if (workspaces == null || workspaces.data() == null) {
                 return null;

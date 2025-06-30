@@ -6,6 +6,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class JwtTokenUtil {
     private static final Logger log = LoggerFactory.getLogger(JwtTokenUtil.class);
 
     // 默认密钥，可通过配置文件覆盖
-    @Value("${jwt.secret:e07437cb-09be-47d0-9336-150e21ebbecd}")
+    @Value("${jwt.secret:gmYTZlXESyoSTicizrZoIsLi8GPRL0QHdykpDarCUtCmvbT4o7d4mLrTcV16wflprC1QfIoQF42uLFL6aVsIjQ==}")
     private String secret;
 
     @Value("${jwt.expiration:86400000000}")
@@ -127,6 +128,7 @@ public class JwtTokenUtil {
      * @return 密钥
      */
     private Key getSignKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

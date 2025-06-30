@@ -7,11 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,12 +18,11 @@ import java.util.Map;
 // 移除RequestScope，改为单例模式，通过手动设置认证信息来支持多线程环境
 public class PawsqlApiService {
     private static final Logger log = LoggerFactory.getLogger(PawsqlApiService.class);
-    private static final String CLOUD_API_URL = "https://www.pawsql.com";
-    private static final String API_PATH = "/api/";
+    private static final String API_PATH = "/api/v1";
 
     private final RestTemplate restTemplate;
     // 使用ThreadLocal存储每个线程的认证信息
-    private final ThreadLocal<String> apiBaseUrl = new ThreadLocal<>();
+    private final String apiBaseUrl;
     private final ThreadLocal<String> apiKey = new ThreadLocal<>();
     private final ThreadLocal<String> frontendUrl = new ThreadLocal<>();
     private final ThreadLocal<String> apiVersion = new ThreadLocal<>();
@@ -35,34 +32,17 @@ public class PawsqlApiService {
 
     public PawsqlApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
+        this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
     }
-    
-    /**
-     * 初始化API服务
-     * 从请求上下文中获取认证信息
-     * 在每次请求时调用
-     */
-    public void initialize() {
-        if (requestContextManager.getTokenPayload() == null) {
-            log.error("请求上下文中未找到认证信息");
-            throw new IllegalStateException("需要认证令牌");
+
+    private String getRequiredEnvVar(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isEmpty()) {
+            throw new IllegalStateException(name + " environment variable is not set");
         }
-        
-        this.apiBaseUrl.set(requestContextManager.getBaseUrl());
-        this.frontendUrl.set(requestContextManager.getFrontendUrl());
-        this.apiVersion.set(requestContextManager.getVersion());
-        String username = requestContextManager.getUsername();
-        this.apiKey.set(requestContextManager.getApiKey());
-        
-        if (apiBaseUrl.get() == null || frontendUrl.get() == null || apiVersion.get() == null || username == null || apiKey.get() == null) {
-            log.error("令牌中缺少必要的认证信息");
-            throw new IllegalStateException("令牌缺少必要的认证字段");
-        }
-        
-        log.info("API服务已初始化，用户: {}", username);
-        validateApiKey();
+        return value;
     }
-    
+
     /**
      * 手动设置认证信息
      * 用于在非HTTP请求线程中使用API服务
@@ -73,31 +53,26 @@ public class PawsqlApiService {
      * @param apiKey API密钥
      */
     public void setAuthInfo(String baseUrl, String frontendUrl, String version, String apiKey) {
-        this.apiBaseUrl.set(baseUrl);
         this.frontendUrl.set(frontendUrl);
         this.apiVersion.set(version);
         this.apiKey.set(apiKey);
         
-        if (baseUrl == null || frontendUrl == null || version == null || apiKey == null) {
+        if (frontendUrl == null || version == null || apiKey == null) {
             throw new IllegalArgumentException("认证信息不能为空");
         }
         
         log.info("API服务已手动初始化");
     }
 
-    // 已移除getRequiredEnvVar方法，改为从请求上下文获取认证信息
-
-    // 已移除initializeApiCredentials方法，改为从请求上下文获取认证信息
-
     private ApiResult executeApiCall(String endpoint, Map<String, ?> requestBody) {
         try {
             // 检查是否已初始化
-            if (apiBaseUrl.get() == null || apiVersion.get() == null) {
+            if (apiKey.get() == null) {
                 log.error("API服务未初始化，请先调用initialize()或setAuthInfo()");
                 throw new IllegalStateException("API服务未初始化");
             }
-            
-            String url = apiBaseUrl.get() + API_PATH + apiVersion.get() + endpoint;
+
+            String url = apiBaseUrl + API_PATH + endpoint;
             ResponseEntity<ApiResult> response = restTemplate.postForEntity(url, requestBody, ApiResult.class);
             ApiResult result = response.getBody();
 
@@ -119,7 +94,11 @@ public class PawsqlApiService {
     }
 
     public String getApiBaseUrl() {
-        return apiBaseUrl.get();
+        return apiBaseUrl;
+    }
+
+    public String getApiKey() {
+        return apiKey.get();
     }
 
     public boolean validateApiKey() {

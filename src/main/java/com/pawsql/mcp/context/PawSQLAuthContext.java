@@ -1,21 +1,29 @@
 package com.pawsql.mcp.context;
 
 import com.pawsql.mcp.model.JwtTokenPayload;
+import lombok.Getter;
 
 /**
  * 认证上下文
  * 用于在方法调用之间显式传递认证信息
  */
-public class AuthContext {
-    
+@Getter
+public class PawSQLAuthContext {
+
+    /**
+     * -- GETTER --
+     *  获取认证信息
+     *
+     * @return 认证信息
+     */
     private final JwtTokenPayload tokenPayload;
-    
+
     /**
      * 创建认证上下文
      *
      * @param tokenPayload 认证信息
      */
-    public AuthContext(JwtTokenPayload tokenPayload) {
+    public PawSQLAuthContext(JwtTokenPayload tokenPayload) {
         this.tokenPayload = tokenPayload;
     }
     
@@ -72,7 +80,7 @@ public class AuthContext {
     public String getApiKey() {
         return tokenPayload != null ? tokenPayload.getApiKey() : null;
     }
-    
+
     /**
      * 检查是否已设置认证信息
      *
@@ -81,18 +89,18 @@ public class AuthContext {
     public boolean isAuthenticated() {
         return tokenPayload != null;
     }
-    
+
     /**
      * 从RequestContextManager创建认证上下文
      *
      * @param contextManager 请求上下文管理器
      * @return 认证上下文，如果没有认证信息则返回null
      */
-    public static AuthContext fromRequestContext(RequestContextManager contextManager) {
+    public static PawSQLAuthContext fromRequestContext(RequestContextManager contextManager) {
         JwtTokenPayload payload = contextManager.getTokenPayload();
-        return payload != null ? new AuthContext(payload) : null;
+        return payload != null ? new PawSQLAuthContext(payload) : null;
     }
-    
+
     /**
      * 将认证上下文应用到RequestContextManager
      *

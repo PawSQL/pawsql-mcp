@@ -1,6 +1,6 @@
 package com.pawsql.mcp.service;
 
-import com.pawsql.mcp.context.AuthContext;
+import com.pawsql.mcp.context.PawSQLAuthContext;
 import com.pawsql.mcp.model.JwtTokenPayload;
 
 import java.util.concurrent.Callable;
@@ -18,7 +18,7 @@ public interface AuthenticationService {
      *
      * @return 当前认证上下文，如果未认证则返回null
      */
-    AuthContext getCurrentAuthContext();
+    PawSQLAuthContext getCurrentAuthContext();
     
     /**
      * 获取当前认证信息
@@ -45,7 +45,7 @@ public interface AuthenticationService {
      * @param authContext 认证上下文
      * @param runnable 要执行的操作
      */
-    void runWithAuthContext(AuthContext authContext, Runnable runnable);
+    void runWithAuthContext(PawSQLAuthContext authContext, Runnable runnable);
     
     /**
      * 使用指定的认证上下文执行操作并返回结果
@@ -55,7 +55,7 @@ public interface AuthenticationService {
      * @param <T> 返回值类型
      * @return 操作的返回结果
      */
-    <T> T supplyWithAuthContext(AuthContext authContext, Supplier<T> supplier);
+    <T> T supplyWithAuthContext(PawSQLAuthContext authContext, Supplier<T> supplier);
     
     /**
      * 使用指定的认证上下文执行操作并返回结果
@@ -66,7 +66,7 @@ public interface AuthenticationService {
      * @return 操作的返回结果
      * @throws Exception 如果操作抛出异常
      */
-    <V> V callWithAuthContext(AuthContext authContext, Callable<V> callable) throws Exception;
+    <V> V callWithAuthContext(PawSQLAuthContext authContext, Callable<V> callable) throws Exception;
     
     /**
      * 创建一个包装了认证上下文的Runnable
@@ -76,7 +76,7 @@ public interface AuthenticationService {
      * @param runnable 要执行的任务
      * @return 包装后的Runnable
      */
-    Runnable withAuthContext(AuthContext authContext, Runnable runnable);
+    Runnable withAuthContext(PawSQLAuthContext authContext, Runnable runnable);
     
     /**
      * 创建一个包装了认证上下文的Callable
@@ -87,7 +87,7 @@ public interface AuthenticationService {
      * @param <V> 返回值类型
      * @return 包装后的Callable
      */
-    <V> Callable<V> withAuthContext(AuthContext authContext, Callable<V> callable);
+    <V> Callable<V> withAuthContext(PawSQLAuthContext authContext, Callable<V> callable);
     
     /**
      * 创建一个包装了认证上下文的Supplier
@@ -98,5 +98,5 @@ public interface AuthenticationService {
      * @param <T> 返回值类型
      * @return 包装后的Supplier
      */
-    <T> Supplier<T> withAuthContext(AuthContext authContext, Supplier<T> supplier);
+    <T> Supplier<T> withAuthContext(PawSQLAuthContext authContext, Supplier<T> supplier);
 }
