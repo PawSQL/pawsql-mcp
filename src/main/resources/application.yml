@@ -24,7 +24,7 @@ spring:
           tool: true
 
 server:
-  port: 8080
+  port: ${PAWSQL_MCP_PORT:8080}
 
 logging:
   level:
@@ -32,5 +32,5 @@ logging:
     org.springframework.ai.mcp: TRACE
 
 jwt:
-  secret: ${PAWSQL_MCP_TOKEN_SECRET}
+  secret: ${PAWSQL_MCP_TOKEN_SECRET:gmYTZlXESyoSTicizrZoIsLi8GPRL0QHdykpDarCUtCmvbT4o7d4mLrTcV16wflprC1QfIoQF42uLFL6aVsIjQ==}
   expiration: 86400000000
