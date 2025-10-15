@@ -32,7 +32,7 @@ public class PawsqlApiService {
 
     public PawsqlApiService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
-        this.apiBaseUrl = getRequiredEnvVar("PAWSQL_API_BASE_URL");
+        this.apiBaseUrl = System.getenv().getOrDefault("PAWSQL_API_BASE_URL", "http://www.pawsql.com");
     }
 
     private String getRequiredEnvVar(String name) {

@@ -1,15 +1,24 @@
+当然可以。以下是你要求的 **英文版完整文档**，已整合并完善 **Remote SSE Server（推荐）** 章节，加入了 “启用 MCP 服务、配置 MCP URL、获取 MCP 配置并复制” 的详细步骤与示例。整体结构和语法也经过润色，确保符合英文技术文档风格，可直接用作 README.md：
+
+---
+
 # PawSQL MCP Server
 
 ## Project Overview
 
-PawSQL MCP Server is a SQL optimization service developed based on Spring AI, providing SQL performance analysis and optimization suggestions. It runs as an MCP (Model Control Protocol) server and provides SQL optimization capabilities through API interfaces.
+**PawSQL MCP Server** is a SQL optimization service built on **Spring AI**, providing SQL performance analysis and optimization recommendations.
+It runs as an **MCP (Model Control Protocol)** server and exposes SQL optimization capabilities via API interfaces.
+
+---
 
 ## Key Features
 
-* Supports both workspace and workspace-free optimization modes
-* Provides SQL rewriting and index optimization suggestions
-* Visual execution plan analysis (for database-connected workspaces)
-* Performance evaluation reports
+* Supports both **workspace** and **workspace-free** optimization modes
+* Provides **SQL rewriting** and **index optimization** suggestions
+* **Visual execution plan** analysis (for connected databases)
+* **Performance evaluation reports** for improved SQL efficiency
+
+---
 
 ## Supported Databases
 
@@ -22,34 +31,89 @@ PawSQL MCP Server is a SQL optimization service developed based on Spring AI, pr
 * GaussDB
 * DWS
 
+---
+
 ## Installation Guide
 
-### Option 1: Remote SSE Server (Recommended)
+### 🟢 Option 1: Remote SSE Server (Recommended)
 
-1. Deploy the server:
+#### **1. Deploy the Server**
+
+Run the following command to pull and start the Docker container:
 
 ```bash
-# Pull and run the Docker container
+# Pull and run the PawSQL MCP Server container
 docker run -d \
   --name pawsql-mcp-server \
   -p 8080:8080 \
-  -e PAWSQL_EDITION=<edition> \
   -e PAWSQL_API_BASE_URL=<api-url> \
-  -e PAWSQL_API_EMAIL=<email> \
-  -e PAWSQL_API_PASSWORD=<password> \
-  pawsql/pawsql-mcp-server:latest
+  pawsql/pawsql-mcp-server-sse:latest
 ```
 
-2. Add the following configuration to your Claude Desktop configuration file:
+> 💡 **Notes:**
+>
+> * Replace `<api-url>` with your PawSQL API base address, e.g. `https://api.pawsql.com`.
+> * After starting, the SSE endpoint will be available at `http://<server-ip>:8080/sse`.
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+---
+
+#### **2. Enable and Configure the MCP Service**
+
+After deployment, log in to your **PawSQL Config page** and follow these steps:
+
+1. Navigate to **Feature Enablement → Enable MCP Server**.
+2. **Enable the MCP Service** toggle.
+3. Enter your deployed MCP SSE server address in the **MCP Server URL** field.
+   Example:
+
+   ```
+   http://<server-ip>:8080/sse
+   ```
+4. Save the configuration.
+
+---
+
+#### **3. Retrieve MCP Configuration**
+
+Go to your **User Settings** page in the PawSQL web interface and click
+**"Get MCP Configuration and Copy"**.
+
+This will generate a ready-to-use configuration snippet (including authentication headers), for example:
 
 ```json
 {
   "mcpServers": {
-    "PawSQL": {
-      "url": "http://localhost:8080/sse"
+    "PawSQLMcpServer": {
+      "url": "http://xxx.xxx.xxx/sse",
+      "headers": {
+        "Authorization": "Bearer XXX"
+      }
+    }
+  }
+}
+```
+
+---
+
+#### **4. Configure Claude Desktop**
+
+Add the copied configuration to Claude Desktop’s configuration file.
+
+* **macOS**:
+  `~/Library/Application Support/Claude/claude_desktop_config.json`
+* **Windows**:
+  `%APPDATA%/Claude/claude_desktop_config.json`
+
+Example configuration:
+
+```json
+{
+  "mcpServers": {
+    "PawSQLMcpServer": {
+      "url": "http://xxx.xxx.xxx/sse",
+      "headers": {
+        "Authorization": "Bearer <your-token>"
+      }
     }
   }
 }

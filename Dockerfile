@@ -15,11 +15,11 @@ CMD ["java", "-jar", "app.jar"]
 
 # 构建步骤:
 # 1. 构建 jar 文件
-#    mvn clean package
+# mvn clean package
 
 # 2. Build Docker image
 # docker build -t pawsql/pawsql-mcp-server-sse:latest .
-# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server:0.1.0_beta -t pawsql/pawsql-mcp-server:latest --push .
+# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server-sse:0.1.0_beta -t pawsql/pawsql-mcp-server-sse:latest --push .
 
 # 运行 SSE 服务（注意容器内外端口一致）:
 # docker run -d --name pawsql-mcp-server -p 8080:8080 -e PAWSQL_API_BASE_URL=http://localhost:8002 pawsql/pawsql-mcp-server-sse:latest
