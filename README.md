@@ -1,7 +1,3 @@
-当然可以。以下是你要求的 **英文版完整文档**，已整合并完善 **Remote SSE Server（推荐）** 章节，加入了 “启用 MCP 服务、配置 MCP URL、获取 MCP 配置并复制” 的详细步骤与示例。整体结构和语法也经过润色，确保符合英文技术文档风格，可直接用作 README.md：
-
----
-
 # PawSQL MCP Server
 
 ## Project Overview
