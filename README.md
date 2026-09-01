@@ -41,7 +41,7 @@ Run the following command to pull and start the Docker container:
 # Pull and run the PawSQL MCP Server container
 docker run -d \
   --name pawsql-mcp-server \
-  -p 8080:8080 \
+  -p 8766:8766 \
   -e PAWSQL_API_BASE_URL=<api-url> \
   pawsql/pawsql-mcp-server-sse:latest
 ```
@@ -49,7 +49,7 @@ docker run -d \
 > 💡 **Notes:**
 >
 > * Replace `<api-url>` with your PawSQL API base address, e.g. `https://api.pawsql.com`.
-> * After starting, the SSE endpoint will be available at `http://<server-ip>:8080/sse`.
+> * After starting, the SSE endpoint will be available at `http://<server-ip>:8766/sse`.
 
 ---
 
@@ -63,7 +63,7 @@ After deployment, log in to your **PawSQL Config page** and follow these steps:
    Example:
 
    ```
-   http://<server-ip>:8080/sse
+   http://<server-ip>:8766/sse
    ```
 4. Save the configuration.
 

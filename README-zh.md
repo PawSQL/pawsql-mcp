@@ -41,7 +41,7 @@
 # 拉取并运行 PawSQL MCP Server 容器
 docker run -d \
   --name pawsql-mcp-server \
-  -p 8080:8080 \
+  -p 8766:8766 \
   -e PAWSQL_API_BASE_URL=<api-url> \
   pawsql/pawsql-mcp-server-sse:latest
 ```
@@ -52,7 +52,7 @@ docker run -d \
 > * 服务启动后，SSE 端点地址为：
     >
     >   ```
->   http://<server-ip>:8080/sse
+>   http://<server-ip>:8766/sse
 >   ```
 
 ---
@@ -66,7 +66,7 @@ docker run -d \
 3. 在 **MCP Server URL** 字段中填写你部署的 SSE 服务地址，例如：
 
    ```
-   http://<server-ip>:8080/sse
+   http://<server-ip>:8766/sse
    ```
 4. 点击 **保存配置**
 
