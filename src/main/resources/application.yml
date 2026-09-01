@@ -4,6 +4,9 @@ spring:
   main:
     web-application-type: servlet
     banner-mode: off
+  mvc:
+    async:
+      request-timeout: -1
   ai:
     mcp:
       server:
