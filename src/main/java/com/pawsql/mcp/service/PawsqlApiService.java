@@ -56,11 +56,11 @@ public class PawsqlApiService {
         this.frontendUrl.set(frontendUrl);
         this.apiVersion.set(version);
         this.apiKey.set(apiKey);
-        
-        if (frontendUrl == null || version == null || apiKey == null) {
-            throw new IllegalArgumentException("认证信息不能为空");
+
+        if (apiKey == null) {
+            throw new IllegalArgumentException("apiKey不能为空");
         }
-        
+
         log.info("API服务已手动初始化");
     }
 

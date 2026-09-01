@@ -30,12 +30,6 @@ public class SqlOptimizeService {
     @Value("${pawsql.anonymous.user-key:}")
     private String anonymousUserKey;
 
-    @Value("${pawsql.anonymous.frontend-url:}")
-    private String anonymousFrontendUrl;
-
-    @Value("${pawsql.anonymous.edition:cloud}")
-    private String anonymousEdition;
-
     public SqlOptimizeService(PawsqlApiService apiService) {
         this.apiService = apiService;
     }
@@ -59,7 +53,7 @@ public class SqlOptimizeService {
                     if (anonymousUserKey != null && !anonymousUserKey.isEmpty()) {
                         log.info("无认证上下文，使用匿名key初始化");
                         String baseUrl = apiService.getApiBaseUrl();
-                        apiService.setAuthInfo(baseUrl, anonymousFrontendUrl, anonymousEdition, anonymousUserKey);
+                        apiService.setAuthInfo(baseUrl, baseUrl, null, anonymousUserKey);
                         return;
                     }
                     log.error("无法获取认证信息，请确保在调用前已设置认证上下文");
@@ -90,7 +84,8 @@ public class SqlOptimizeService {
 
     @Tool(
             name = "list_workspaces",
-            description = "List current workspaces and return their basic information in a markdown table."
+            description = "List current workspaces and return their basic information in a markdown table. " +
+                    "Note: This tool requires a registered user key. Anonymous users cannot list workspaces."
     )
     public ApiResult listWorkspaces() {
         try {
@@ -106,7 +101,9 @@ public class SqlOptimizeService {
 
     @Tool(
             name = "get_workspace_info",
-            description = "Get workspace information by name or ID, including ID, database type, etc. Returns a notification if the workspace is not found."
+            description = "Get workspace information by name or ID, including ID, database type, etc. " +
+                    "Returns a notification if the workspace is not found. " +
+                    "Note: This tool requires a registered user key. Anonymous users cannot query workspace info."
     )
     public ApiResult getWorkspaceInfo(
             @Schema(description = "Workspace name", required = false)

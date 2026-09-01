@@ -37,12 +37,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${pawsql.anonymous.user-key:}")
     private String anonymousUserKey;
 
-    @Value("${pawsql.anonymous.frontend-url:}")
-    private String anonymousFrontendUrl;
-
-    @Value("${pawsql.anonymous.edition:cloud}")
-    private String anonymousEdition;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -71,8 +65,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String baseUrl = System.getenv().getOrDefault("PAWSQL_API_BASE_URL", "http://www.pawsql.com");
                 JwtTokenPayload anonymousPayload = new JwtTokenPayload(
                         baseUrl,
-                        anonymousFrontendUrl,
-                        anonymousEdition,
+                        baseUrl,
+                        null,
                         "anonymous",
                         anonymousUserKey
                 );
