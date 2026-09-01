@@ -226,22 +226,24 @@ public class SqlOptimizeService {
             DatabaseInfo dbInfo,
 
             @Schema(description = "Whether to use workspace for optimization, based on dbInfo. True if user provides DDL info or database connection info, false otherwise", required = false)
-            boolean useWorkspace,
+            Boolean useWorkspace,
 
             @Schema(description = "Existing workspace ID, true if provided by user, false otherwise", required = false)
             @ToolParam(required = false)
             String workspaceId,
 
             @Schema(description = "Whether to validate optimization results. Should be false unless user explicitly requests validation. Validation requires workspace with database connection info", required = false)
-            boolean validateFlag
+            Boolean validateFlag
     ) {
         ApiResult validationResult = validateOptimizeParams(sql, dbType);
         if (validationResult != null) return validationResult;
 
         try {
-            log.info("Starting SQL optimization, database type: {}, using workspace: {}", dbType, useWorkspace);
-            String finalWorkspaceId = prepareWorkspace(workspaceId, useWorkspace, dbInfo);
-            return processOptimization(sql, finalWorkspaceId, dbType, validateFlag);
+            boolean useWs = useWorkspace != null && useWorkspace;
+            boolean validate = validateFlag != null && validateFlag;
+            log.info("Starting SQL optimization, database type: {}, using workspace: {}", dbType, useWs);
+            String finalWorkspaceId = prepareWorkspace(workspaceId, useWs, dbInfo);
+            return processOptimization(sql, finalWorkspaceId, dbType, validate);
         } catch (Exception e) {
             log.error("Error occurred during SQL optimization", e);
             return new ApiResult(500, "Error during SQL optimization: " + e.getMessage(), null);
