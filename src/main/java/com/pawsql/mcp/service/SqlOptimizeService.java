@@ -53,7 +53,12 @@ public class SqlOptimizeService {
                     if (anonymousUserKey != null && !anonymousUserKey.isEmpty()) {
                         log.info("无认证上下文，使用匿名key初始化");
                         String baseUrl = apiService.getApiBaseUrl();
+                        // 先用 baseUrl 作为临时 frontendUrl，再从后端 /system/info 获取真实值
                         apiService.setAuthInfo(baseUrl, baseUrl, null, anonymousUserKey);
+                        String fetchedFrontendUrl = apiService.fetchFrontendUrl();
+                        if (fetchedFrontendUrl != null && !fetchedFrontendUrl.isEmpty()) {
+                            apiService.setAuthInfo(baseUrl, fetchedFrontendUrl, null, anonymousUserKey);
+                        }
                         return;
                     }
                     log.error("无法获取认证信息，请确保在调用前已设置认证上下文");
@@ -243,6 +248,65 @@ public class SqlOptimizeService {
         }
     }
 
+    @Tool(
+            name = "check_optimization_status",
+            description = "Check the status of a SQL optimization task and return results if completed. " +
+                    "Use this after optimize_sql returns an 'in progress' notice. " +
+                    "You can query by analysisId or analysisName (at least one is required)."
+    )
+    public ApiResult checkOptimizationStatus(
+            @Schema(description = "Analysis ID returned by optimize_sql", required = false)
+            @ToolParam(required = false)
+            String analysisId,
+
+            @Schema(description = "Analysis name (used when analysisId is not provided)", required = false)
+            @ToolParam(required = false)
+            String analysisName,
+
+            @Schema(description = "Workspace ID used during optimization", required = false)
+            @ToolParam(required = false)
+            String workspaceId
+    ) {
+        if (StringUtils.isBlank(analysisId) && StringUtils.isBlank(analysisName)) {
+            return new ApiResult(400, "analysisId and analysisName cannot both be empty", null);
+        }
+        try {
+            ensureApiServiceInitialized();
+            String queryDesc = StringUtils.isNotBlank(analysisId) ? "analysisId=" + analysisId : "analysisName=" + analysisName;
+            log.info("Checking optimization status for {}", queryDesc);
+
+            ApiResult summaryResult = apiService.getAnalysisSummary(analysisId, analysisName);
+            if (summaryResult == null || summaryResult.data() == null) {
+                return new ApiResult(500, "Failed to query analysis status", null);
+            }
+
+            Map<String, Object> summaryData = (Map<String, Object>) summaryResult.data();
+            String status = summaryData.get("status") != null ? summaryData.get("status").toString() : "";
+            String resolvedAnalysisId = summaryData.get("analysisId") != null ? summaryData.get("analysisId").toString() : analysisId;
+            log.info("Analysis {} status: {}", queryDesc, status);
+
+            if ("failed".equals(status)) {
+                return new ApiResult(500, "SQL optimization failed on the server side", null);
+            }
+            if (status.startsWith("success")) {
+                return processAnalysisResult(summaryResult, workspaceId, resolvedAnalysisId);
+            }
+            // still running
+            String analysesUrl = apiService.getFrontendUrl() + "/app/analyses";
+            Map<String, String> notice = new LinkedHashMap<>();
+            notice.put("analysisId", resolvedAnalysisId);
+            notice.put("status", status);
+            notice.put("analysesUrl", analysesUrl);
+            notice.put("message", "SQL optimization is still in progress. Please check again later at " + analysesUrl +
+                    " or call check_optimization_status again with analysisId=" + resolvedAnalysisId + ".");
+            return new ApiResult(200, "Optimization in progress", notice);
+
+        } catch (Exception e) {
+            log.error("Failed to check optimization status", e);
+            return new ApiResult(500, "Failed to check optimization status: " + e.getMessage(), null);
+        }
+    }
+
     private ApiResult validateOptimizeParams(String sql, String dbType) {
         if (sql == null || sql.trim().isEmpty()) {
             return new ApiResult(400, "SQL statement cannot be empty. Please provide the SQL query to be optimized", null);
@@ -263,6 +327,9 @@ public class SqlOptimizeService {
         return workspaceId;
     }
 
+    private static final long OPTIMIZATION_TIMEOUT_SECONDS = 120;
+    private static final long POLL_INTERVAL_SECONDS = 3;
+
     private ApiResult processOptimization(String sql, String workspaceId, String dbType, boolean validateFlag) {
         try {
             // 确保API服务已初始化
@@ -276,10 +343,48 @@ public class SqlOptimizeService {
 
             Map<String, Object> data = (Map<String, Object>) createResult.data();
             String analysisId = (String) data.get("analysisId");
-            log.info("Analysis task created, ID: {}", analysisId);
+            String status = data.get("status") != null ? data.get("status").toString() : "";
+            log.info("Analysis task created, ID: {}, status: {}", analysisId, status);
 
-            ApiResult result = apiService.getAnalysisSummary(analysisId);
-            return processAnalysisResult(result, workspaceId, analysisId);
+            // 如果创建时就已经完成（命中缓存等），直接获取结果
+            if ("success".equals(status) || status.startsWith("success")) {
+                ApiResult result = apiService.getAnalysisSummary(analysisId);
+                return processAnalysisResult(result, workspaceId, analysisId);
+            }
+
+            // 轮询等待优化完成，最多等 2 分钟
+            long deadline = System.currentTimeMillis() + OPTIMIZATION_TIMEOUT_SECONDS * 1000;
+            while (System.currentTimeMillis() < deadline) {
+                Thread.sleep(POLL_INTERVAL_SECONDS * 1000);
+                ApiResult summaryResult = apiService.getAnalysisSummary(analysisId);
+                if (summaryResult == null || summaryResult.data() == null) {
+                    continue;
+                }
+                Map<String, Object> summaryData = (Map<String, Object>) summaryResult.data();
+                String currentStatus = summaryData.get("status") != null ? summaryData.get("status").toString() : "";
+                log.info("Analysis {} status: {}", analysisId, currentStatus);
+
+                if ("failed".equals(currentStatus)) {
+                    return new ApiResult(500, "SQL optimization failed on the server side", null);
+                }
+                if (currentStatus.startsWith("success")) {
+                    return processAnalysisResult(summaryResult, workspaceId, analysisId);
+                }
+                // status=running，继续轮询
+            }
+
+            // 超时，返回提示
+            log.info("Analysis {} still running after {}s, returning async notice", analysisId, OPTIMIZATION_TIMEOUT_SECONDS);
+            String analysesUrl = apiService.getFrontendUrl() + "/app/analyses";
+            Map<String, String> notice = new LinkedHashMap<>();
+            notice.put("analysisId", analysisId);
+            notice.put("analysesUrl", analysesUrl);
+            notice.put("message", "SQL optimization is still in progress (it may take several minutes for complex SQL). " +
+                    "You can check the optimization status at " + analysesUrl + ". " +
+                    "Once completed, provide the analysis name or ID to continue the discussion, " +
+                    "or call check_optimization_status with analysisId=" + analysisId + " to query the result.");
+            return new ApiResult(200, "SQL optimization is in progress", notice);
+
         } catch (Exception e) {
             log.error("SQL optimization failed", e);
             return new ApiResult(500, "SQL optimization failed: " + e.getMessage(), null);

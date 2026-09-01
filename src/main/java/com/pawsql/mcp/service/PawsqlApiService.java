@@ -101,6 +101,27 @@ public class PawsqlApiService {
         return apiKey.get();
     }
 
+    /**
+     * 从后端获取系统信息（frontendUrl 等）
+     * GET /api/v1/system/info，无需认证
+     */
+    public String fetchFrontendUrl() {
+        try {
+            String url = apiBaseUrl + API_PATH + "/system/info";
+            ResponseEntity<ApiResult> response = restTemplate.getForEntity(url, ApiResult.class);
+            ApiResult result = response.getBody();
+            if (result != null && result.code() == 200 && result.data() != null) {
+                Map<String, Object> data = (Map<String, Object>) result.data();
+                String url2 = (String) data.get("frontendUrl");
+                log.info("Fetched frontendUrl from backend: {}", url2);
+                return url2;
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch system info", e);
+        }
+        return null;
+    }
+
     public boolean validateApiKey() {
         try {
             Map<String, String> requestBody = new HashMap<>();
@@ -120,9 +141,18 @@ public class PawsqlApiService {
     }
 
     public ApiResult getAnalysisSummary(String analysisId) {
+        return getAnalysisSummary(analysisId, null);
+    }
+
+    public ApiResult getAnalysisSummary(String analysisId, String analysisName) {
         Map<String, String> requestBody = createAuthenticatedRequest();
-        requestBody.put("analysisId", analysisId);
-        log.info("Getting SQL analysis results: {}", analysisId);
+        if (analysisId != null && !analysisId.isEmpty()) {
+            requestBody.put("analysisId", analysisId);
+        }
+        if (analysisName != null && !analysisName.isEmpty()) {
+            requestBody.put("analysisName", analysisName);
+        }
+        log.info("Getting SQL analysis results: analysisId={}, analysisName={}", analysisId, analysisName);
         return executeApiCall("/getAnalysisSummary", requestBody);
     }
 
