@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
@@ -25,6 +26,15 @@ public class SqlOptimizeService {
 
     @Autowired
     private RequestContextManager requestContextManager;
+
+    @Value("${pawsql.anonymous.user-key:}")
+    private String anonymousUserKey;
+
+    @Value("${pawsql.anonymous.frontend-url:}")
+    private String anonymousFrontendUrl;
+
+    @Value("${pawsql.anonymous.edition:cloud}")
+    private String anonymousEdition;
 
     public SqlOptimizeService(PawsqlApiService apiService) {
         this.apiService = apiService;
@@ -45,6 +55,13 @@ public class SqlOptimizeService {
                 PawSQLAuthContext legacyAuthContext = PawSQLAuthContext.fromRequestContext(requestContextManager);
 
                 if (legacyAuthContext == null) {
+                    // 没有认证上下文，尝试用匿名 key 兜底
+                    if (anonymousUserKey != null && !anonymousUserKey.isEmpty()) {
+                        log.info("无认证上下文，使用匿名key初始化");
+                        String baseUrl = apiService.getApiBaseUrl();
+                        apiService.setAuthInfo(baseUrl, anonymousFrontendUrl, anonymousEdition, anonymousUserKey);
+                        return;
+                    }
                     log.error("无法获取认证信息，请确保在调用前已设置认证上下文");
                     throw new IllegalStateException("认证信息缺失，请确保在调用前已设置认证上下文。认证信息必须从请求头中获取");
                 }

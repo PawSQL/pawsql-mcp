@@ -34,3 +34,9 @@ logging:
 jwt:
   secret: ${PAWSQL_MCP_TOKEN_SECRET:gmYTZlXESyoSTicizrZoIsLi8GPRL0QHdykpDarCUtCmvbT4o7d4mLrTcV16wflprC1QfIoQF42uLFL6aVsIjQ==}
   expiration: 86400000000
+
+pawsql:
+  anonymous:
+    user-key: ${PAWSQL_ANONYMOUS_USER_KEY:23927924-010A7F59-69ABCF01-B1E1D303}
+    frontend-url: ${PAWSQL_ANONYMOUS_FRONTEND_URL:https://www.pawsql.com}
+    edition: ${PAWSQL_ANONYMOUS_EDITION:cloud}
