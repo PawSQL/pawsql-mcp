@@ -1,5 +1,5 @@
 # 使用官方 JDK 17 精简版作为基础镜像
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jdk-jammy
 
 # 设置工作目录
 WORKDIR /app
@@ -18,8 +18,8 @@ CMD ["java", "-jar", "app.jar"]
 # mvn clean package
 
 # 2. Build Docker image
-# docker build -t pawsql/pawsql-mcp-server-sse:latest .
-# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server-sse:0.1.0_beta -t pawsql/pawsql-mcp-server-sse:latest --push .
+# docker build -t pawsql/pawsql-mcp-server:latest .
+# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server:0.2.0_beta -t pawsql/pawsql-mcp-server:latest --push .
 
 # 运行 SSE 服务（注意容器内外端口一致）:
-# docker run -d --name pawsql-mcp-server -p 8766:8766 -e PAWSQL_API_BASE_URL=http://localhost:8002 pawsql/pawsql-mcp-server-sse:latest
+# docker run -d --name pawsql-mcp-server -p 8766:8766 -e PAWSQL_API_BASE_URL=http://localhost:8002 pawsql/pawsql-mcp-server:latest
