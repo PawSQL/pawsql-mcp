@@ -198,7 +198,7 @@ public class PawsqlApiService {
                 requestBody.put("validateFlag", String.valueOf(validateFlag));
             }
 
-            return executeApiCall("/createAnalysis", requestBody);
+            return executeApiCall("/createAnalysisAsync", requestBody);
         } catch (Exception e) {
             log.error("SQL optimization request failed", e);
             throw new RuntimeException("SQL optimization service call failed", e);
