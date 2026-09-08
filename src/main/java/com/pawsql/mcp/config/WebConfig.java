@@ -26,8 +26,8 @@ public class WebConfig {
     public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration() {
         FilterRegistrationBean<JwtAuthenticationFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(jwtAuthenticationFilter);
-        // 配置拦截的URL模式，包括SSE和MCP端点
-        registrationBean.addUrlPatterns("/api/v1/sse", "/api/v1/mcp");
+        // 配置拦截的URL模式（STATELESS 单端点 /mcp）
+        registrationBean.addUrlPatterns("/mcp");
         // 设置过滤器优先级
         registrationBean.setOrder(1);
         return registrationBean;

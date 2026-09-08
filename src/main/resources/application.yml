@@ -4,9 +4,6 @@ spring:
   main:
     web-application-type: servlet
     banner-mode: off
-  mvc:
-    async:
-      request-timeout: -1
   ai:
     mcp:
       server:
@@ -14,25 +11,23 @@ spring:
         stdio: false
         name: pawsql-optimizer
         version: 0.0.1
-        resource-change-notification: true
-        tool-change-notification: true
-        prompt-change-notification: true
-        sse-endpoint: /sse
-        sse-message-endpoint: /mcp
+        protocol: STATELESS
         type: sync
         capabilities:
           completion: true
           prompt: true
           resource: true
           tool: true
+        streamable-http:
+          mcp-endpoint: /mcp
 
 server:
   port: ${PAWSQL_MCP_PORT:8766}
 
 logging:
   level:
-    io.modelcontextprotocol: TRACE
-    org.springframework.ai.mcp: TRACE
+    io.modelcontextprotocol: WARN
+    org.springframework.ai.mcp: WARN
 
 jwt:
   secret: ${PAWSQL_MCP_TOKEN_SECRET:gmYTZlXESyoSTicizrZoIsLi8GPRL0QHdykpDarCUtCmvbT4o7d4mLrTcV16wflprC1QfIoQF42uLFL6aVsIjQ==}
