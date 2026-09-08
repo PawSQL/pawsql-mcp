@@ -3,7 +3,7 @@
 ## 项目概述
 
 **PawSQL MCP Server** 是一款基于 **Spring AI** 构建的 **SQL 优化服务**，用于提供 SQL 性能分析与优化建议。
-该服务以 **MCP（Model Control Protocol）服务器** 的形式运行，并通过标准 API 接口向外提供 SQL 优化能力。
+该服务以 **MCP（Model Context Protocol）服务器** 的形式运行，采用 **无状态 Streamable HTTP** 传输协议，通过单一 `/mcp` 端点对外提供 SQL 优化能力。
 
 ---
 
@@ -13,6 +13,8 @@
 * 提供 **SQL 重写** 与 **索引优化** 建议
 * 支持 **可视化执行计划分析**（当连接数据库时）
 * 输出 **性能评估报告**，帮助提升 SQL 执行效率
+* **无状态 Streamable HTTP** 传输 — 无会话状态、无连接泄漏、适合云原生部署
+* **每请求 JWT 认证** — 每个请求携带 `Authorization` 头进行身份验证
 
 ---
 
@@ -29,50 +31,62 @@
 
 ---
 
+## 技术栈
+
+| 组件 | 版本 |
+|------|------|
+| Spring Boot | 3.5.x |
+| Spring AI | 1.1.x |
+| Java | 17+ |
+| MCP 传输协议 | 无状态 Streamable HTTP |
+| 端点 | `/mcp`（POST） |
+
+---
+
 ## 安装指南
 
-### 🟢 方式一：远程 SSE 模式（推荐）
+### 🟢 方式一：远程 Streamable HTTP 模式（推荐）
 
-#### **1. 部署服务**
+#### 1. 部署服务
 
 运行以下命令拉取并启动 Docker 容器：
 
 ```bash
-# 拉取并运行 PawSQL MCP Server 容器
 docker run -d \
   --name pawsql-mcp-server \
   -p 8766:8766 \
   -e PAWSQL_API_BASE_URL=<api-url> \
-  pawsql/pawsql-mcp-server-sse:latest
+  pawsql/pawsql-mcp-server:latest
 ```
 
-> 💡 **说明：**
+> **说明：**
 >
 > * 将 `<api-url>` 替换为你的 PawSQL API 服务地址，例如 `https://api.pawsql.com`。
-> * 服务启动后，SSE 端点地址为：
-    >
-    >   ```
->   http://<server-ip>:8766/sse
+> * 服务启动后，MCP 端点地址为：
+>
+>   ```
+>   http://<server-ip>:8766/mcp
 >   ```
 
 ---
 
-#### **2. 启用并配置 MCP 服务**
+#### 2. 启用并配置 MCP 服务
 
 部署完成后，登录 **PawSQL 配置页面**，按以下步骤操作：
 
 1. 打开 **功能开关 → 启用 MCP 服务**
 2. 打开 **MCP 服务启用开关**
-3. 在 **MCP Server URL** 字段中填写你部署的 SSE 服务地址，例如：
+3. 在 **MCP Server URL** 字段中填写你部署的 MCP 服务地址，例如：
 
    ```
-   http://<server-ip>:8766/sse
+   http://<server-ip>:8766/mcp
    ```
+
 4. 点击 **保存配置**
 
 ---
 
-#### **3. 获取 MCP 配置**
+#### 3. 获取 MCP 配置
 
 进入 **PawSQL Web 界面 → 用户设置** 页面，点击
 **「获取 MCP 配置并复制」**，系统会生成完整配置片段，例如：
@@ -81,7 +95,7 @@ docker run -d \
 {
   "mcpServers": {
     "PawSQLMcpServer": {
-      "url": "http://xxx.xxx.xxx/sse",
+      "url": "http://xxx.xxx.xxx/mcp",
       "headers": {
         "Authorization": "Bearer XXX"
       }
@@ -92,7 +106,7 @@ docker run -d \
 
 ---
 
-#### **4. 配置 Claude Desktop**
+#### 4. 配置 Claude Desktop
 
 将上述配置内容添加到 Claude Desktop 的配置文件中。
 
@@ -113,7 +127,7 @@ docker run -d \
 {
   "mcpServers": {
     "PawSQLMcpServer": {
-      "url": "http://xxx.xxx.xxx/sse",
+      "url": "http://xxx.xxx.xxx/mcp",
       "headers": {
         "Authorization": "Bearer <your-token>"
       }
@@ -126,7 +140,7 @@ docker run -d \
 
 ### ⚙️ 方式二：本地 STDIO 模式（传统方式）
 
-#### **1. 配置 Claude Desktop**
+#### 1. 配置 Claude Desktop
 
 1. 打开 Claude Desktop
 2. 进入 **Settings（设置） → Developer（开发者）**
@@ -134,7 +148,7 @@ docker run -d \
 4. 添加 MCP 配置
 5. 保存并重启 Claude Desktop
 
-#### **2. MCP 服务配置模板**
+#### 2. MCP 服务配置模板
 
 ```json
 {
@@ -156,7 +170,7 @@ docker run -d \
 }
 ```
 
-#### **3. 参数说明**
+#### 3. 参数说明
 
 | 参数名          | 说明                                                  |
 | ------------ | --------------------------------------------------- |
@@ -167,7 +181,7 @@ docker run -d \
 
 ---
 
-#### **4. 各版本配置示例**
+#### 4. 各版本配置示例
 
 **企业版：**
 

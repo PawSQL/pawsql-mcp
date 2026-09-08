@@ -3,7 +3,7 @@
 ## Project Overview
 
 **PawSQL MCP Server** is a SQL optimization service built on **Spring AI**, providing SQL performance analysis and optimization recommendations.
-It runs as an **MCP (Model Control Protocol)** server and exposes SQL optimization capabilities via API interfaces.
+It runs as an **MCP (Model Context Protocol)** server using the **Stateless Streamable HTTP** transport and exposes SQL optimization capabilities via a single `/mcp` endpoint.
 
 ---
 
@@ -13,6 +13,8 @@ It runs as an **MCP (Model Control Protocol)** server and exposes SQL optimizati
 * Provides **SQL rewriting** and **index optimization** suggestions
 * **Visual execution plan** analysis (for connected databases)
 * **Performance evaluation reports** for improved SQL efficiency
+* **Stateless Streamable HTTP** transport — no session state, no connection leaks, cloud-native friendly
+* **Per-request JWT authentication** — every request carries an `Authorization` header
 
 ---
 
@@ -29,47 +31,59 @@ It runs as an **MCP (Model Control Protocol)** server and exposes SQL optimizati
 
 ---
 
+## Technology Stack
+
+| Component | Version |
+|-----------|---------|
+| Spring Boot | 3.5.x |
+| Spring AI | 1.1.x |
+| Java | 17+ |
+| MCP Protocol | Stateless Streamable HTTP |
+| Endpoint | `/mcp` (POST) |
+
+---
+
 ## Installation Guide
 
-### 🟢 Option 1: Remote SSE Server (Recommended)
+### Option 1: Remote Streamable HTTP Server (Recommended)
 
-#### **1. Deploy the Server**
+#### 1. Deploy the Server
 
 Run the following command to pull and start the Docker container:
 
 ```bash
-# Pull and run the PawSQL MCP Server container
 docker run -d \
   --name pawsql-mcp-server \
   -p 8766:8766 \
   -e PAWSQL_API_BASE_URL=<api-url> \
-  pawsql/pawsql-mcp-server-sse:latest
+  pawsql/pawsql-mcp-server:latest
 ```
 
-> 💡 **Notes:**
+> **Notes:**
 >
 > * Replace `<api-url>` with your PawSQL API base address, e.g. `https://api.pawsql.com`.
-> * After starting, the SSE endpoint will be available at `http://<server-ip>:8766/sse`.
+> * The MCP endpoint will be available at `http://<server-ip>:8766/mcp`.
 
 ---
 
-#### **2. Enable and Configure the MCP Service**
+#### 2. Enable and Configure the MCP Service
 
 After deployment, log in to your **PawSQL Config page** and follow these steps:
 
 1. Navigate to **Feature Enablement → Enable MCP Server**.
 2. **Enable the MCP Service** toggle.
-3. Enter your deployed MCP SSE server address in the **MCP Server URL** field.
+3. Enter your deployed MCP server address in the **MCP Server URL** field.
    Example:
 
    ```
-   http://<server-ip>:8766/sse
+   http://<server-ip>:8766/mcp
    ```
+
 4. Save the configuration.
 
 ---
 
-#### **3. Retrieve MCP Configuration**
+#### 3. Retrieve MCP Configuration
 
 Go to your **User Settings** page in the PawSQL web interface and click
 **"Get MCP Configuration and Copy"**.
@@ -80,7 +94,7 @@ This will generate a ready-to-use configuration snippet (including authenticatio
 {
   "mcpServers": {
     "PawSQLMcpServer": {
-      "url": "http://xxx.xxx.xxx/sse",
+      "url": "http://xxx.xxx.xxx/mcp",
       "headers": {
         "Authorization": "Bearer XXX"
       }
@@ -91,9 +105,9 @@ This will generate a ready-to-use configuration snippet (including authenticatio
 
 ---
 
-#### **4. Configure Claude Desktop**
+#### 4. Configure Claude Desktop
 
-Add the copied configuration to Claude Desktop’s configuration file.
+Add the copied configuration to Claude Desktop's configuration file.
 
 * **macOS**:
   `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -106,7 +120,7 @@ Example configuration:
 {
   "mcpServers": {
     "PawSQLMcpServer": {
-      "url": "http://xxx.xxx.xxx/sse",
+      "url": "http://xxx.xxx.xxx/mcp",
       "headers": {
         "Authorization": "Bearer <your-token>"
       }
