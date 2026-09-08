@@ -19,7 +19,7 @@ CMD ["java", "-jar", "app.jar"]
 
 # 2. Build Docker image
 # docker build -t pawsql/pawsql-mcp-server:latest .
-# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server:0.2.0_beta -t pawsql/pawsql-mcp-server:latest --push .
+# docker buildx build --platform linux/amd64,linux/arm64 -t pawsql/pawsql-mcp-server:0.3.0_beta -t pawsql/pawsql-mcp-server:latest --push .
 
 # 运行 SSE 服务（注意容器内外端口一致）:
 # docker run -d --name pawsql-mcp-server -p 8766:8766 -e PAWSQL_API_BASE_URL=https://www.pawsql.com pawsql/pawsql-mcp-server:latest
